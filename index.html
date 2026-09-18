@@ -1,12 +1,183 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Mi corazón</title>
-</head>
+import turtle as t
+import math as m
+import random as r
 
-<body>
+WIDTH = 600
+HEIGHT = 700
+SCALE = 150
 
-    <h1>Mi corazón ❤️</h1>
+s = t.Screen()
+s.setup(WIDTH, HEIGHT)
+s.bgcolor("#050000")
+s.tracer(0, 0)
 
-</body>
-</html>
+p = t.Turtle()
+p.hideturtle()
+p.penup()
+
+def heart(u):
+
+    x = 1.6 * (m.sin(u) ** 3)
+
+    y = (
+        1.3 * m.cos(u)
+        - 0.5 * m.cos(2 * u)
+        - 0.2 * m.cos(3 * u)
+        - 0.1 * m.cos(4 * u)
+    )
+
+    return x, y
+
+N = 1000
+
+pts = []
+
+for _ in range(N):
+
+    u = r.uniform(0, 2 * m.pi)
+
+    hx, hy = heart(u)
+
+    rad = m.sqrt(r.random())
+
+    x = hx * rad
+    y = hy * rad
+
+    z = r.uniform(-1, 1)
+
+    size = r.uniform(1, 2.2)
+
+    pts.append(
+        (x, y, z, size)
+    )
+
+rays = []
+
+for i in range(100):
+
+    u = (2 * m.pi / 80) * i
+
+    hx, hy = heart(u)
+
+    rays.append(
+        (hx * SCALE, hy * SCALE)
+    )
+
+step = 0
+t_val = 0.0
+
+phase = "grow"
+
+def loop():
+
+    global step
+    global t_val
+    global phase
+
+    p.clear()
+
+    if phase == "grow":
+
+        t_val += 0.055
+
+        if t_val >= 1:
+
+            t_val = 1
+            phase = "pulse"
+
+    if phase == "pulse":
+
+        scale = (
+            1
+            + 0.07 * m.sin(step * 0.12)
+        )
+
+    else:
+
+        scale = t_val
+
+    if phase == "grow":
+
+        head = t_val
+        tail = max(0, t_val - 0.25)
+
+        p.color("#8a0018")
+
+        for hx, hy in rays:
+
+            x1 = hx * tail
+            y1 = hy * tail
+
+            x2 = hx * head
+            y2 = hy * head
+
+            p.goto(x1, y1)
+            p.pendown()
+
+            p.goto(x2, y2)
+
+            p.penup()
+
+    for x, y, z, size in pts:
+
+        wave = (
+            m.sin(
+                step * 0.05 + z * 6
+            )
+            * 0.6
+        )
+        px = (
+            x * SCALE * scale
+            + wave
+        )
+        py = (
+            y * SCALE * scale
+            + wave
+        )
+        brightness = (
+            0.55
+            + 0.45 * ((z + 1) / 2)
+        )
+        red = int(
+            150 + 105 * brightness
+        )
+        green = int(
+            5 + 20 * brightness
+        )
+        blue = int(
+            10 + 35 * brightness
+        )
+        p.color(
+            f"#{red:02x}"
+            f"{green:02x}"
+            f"{blue:02x}"
+        )
+        p.goto(px, py)
+        p.dot(size)
+
+    if phase == "pulse":
+        glow = (
+            1
+            + 0.2 * m.sin(step * 0.12)
+        )
+
+        p.color("#ff3150")
+
+        for x, y, z, size in pts[::12]:
+
+            px = x * SCALE * scale
+            py = y * SCALE * scale
+
+            p.goto(px, py)
+
+            p.dot(1.5 * glow)
+
+    s.update()
+
+    step += 1
+
+    s.ontimer(loop, 10)
+
+loop()
+
+t.mainloop()
